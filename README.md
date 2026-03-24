@@ -21,10 +21,10 @@ A Voice AI assistant to help you schedule meetings
     - A standards-compliant .ics attachment compatible with Apple Calendar and mobile devices.
 
 ## Calendar Integration Logic:
-The core of this project lies in the transition from Voice Intent to Calendar Data.
-    **Tool Calling:** VAPI captures entities (Name, Email ID, Date, Time, Duration) and sends a JSON payload to a production n8n webhook.
-    **Data Processing:** A custom n8n Code Node parses the ISO-8601 strings. It accounts for timezones and calculates end-times based on the requested duration.
-    **ICS Generation:** To ensure universal compatibility, the system dynamically builds an RFC 5545 .ics file using CRLF line endings and the METHOD:REQUEST header. This allows the email to be recognized as a formal "Meeting Invite" by Gmail and Outlook.
+The core of this project lies in the transition from Voice Intent to Calendar Data.\
+    **Tool Calling:** VAPI captures entities (Name, Email ID, Date, Time, Duration) and sends a JSON payload to a production n8n webhook.\
+    **Data Processing:** A custom n8n Code Node parses the ISO-8601 strings. It accounts for timezones and calculates end-times based on the requested duration.\
+    **ICS Generation:** To ensure universal compatibility, the system dynamically builds an RFC 5545 .ics file using CRLF line endings and the METHOD:REQUEST\ header. This allows the email to be recognized as a formal "Meeting Invite" by Gmail and Outlook.
 
 ## Proof of Concept:
     [Live Event Creation Video:](https://www.loom.com/share/9a6de48b8e484dcfa078362be7eee051)
