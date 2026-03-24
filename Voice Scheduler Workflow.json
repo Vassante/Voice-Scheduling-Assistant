@@ -67,7 +67,7 @@
       {
         "json": {
           "headers": {
-            "host": "vassante.app.n8n.cloud",
+            "host": "n8n_HOST_NAME_APPEARS_HERE",
             "user-agent": "axios/1.8.3",
             "content-length": "28348",
             "accept": "application/json, text/plain, */*",
@@ -85,12 +85,12 @@
             "sentry-trace": "086ab55a7c494d65bf4d8b1d1dd48f1d-ab25b8935cbdf9f6",
             "x-call-id": "019d1e9a-69de-7334-b8c4-ef6608233eb8",
             "x-forwarded-for": "44.255.204.77, 172.68.174.86",
-            "x-forwarded-host": "vassante.app.n8n.cloud",
+            "x-forwarded-host": "n8n_HOST_NAME_APPEARS_HERE",
             "x-forwarded-port": "443",
             "x-forwarded-proto": "https",
             "x-forwarded-server": "traefik-prod-users-gwc-102-586899fc8f-xzsw7",
             "x-is-trusted": "yes",
-            "x-real-ip": "44.255.204.77",
+            "x-real-ip": "USER_IP_ADDRESS_APPEARS_HERE",
             "x-vapi-secret": ""
           },
           "params": {},
@@ -106,10 +106,10 @@
                   "function": {
                     "name": "send_calendar_invite",
                     "arguments": {
-                      "email": "vxk230045@utdallas.edu",
+                      "email": "USER_INPUT_EMAIL_ID_APPEARS_HERE",
                       "timezone": "America/Chicago",
-                      "name": "Vassante Kumar",
-                      "title": "Meeting with Vassante Kumar",
+                      "name": "USER_INPUT_NAME_APPEARS_HERE",
+                      "title": "Meeting with USER_NAME_APPEARS_HERE",
                       "duration": 20,
                       "datetime": "2026-03-25T10:00:00"
                     }
@@ -123,10 +123,10 @@
                   "function": {
                     "name": "send_calendar_invite",
                     "arguments": {
-                      "email": "vxk230045@utdallas.edu",
+                      "email": "USER_INPUT_EMAIL_ID_APPEARS_HERE",
                       "timezone": "America/Chicago",
-                      "name": "Vassante Kumar",
-                      "title": "Meeting with Vassante Kumar",
+                      "name": "USER_INPUT_NAME_APPEARS_HERE",
+                      "title": "Meeting with USER_NAME_APPEARS_HERE",
                       "duration": 20,
                       "datetime": "2026-03-25T10:00:00"
                     }
@@ -185,7 +185,7 @@
                     "description": "Call this tool after you have collected and confirmed all details from the user: name, email, datetime, duration, timezone and title. Only call once user confirms everything is correct."
                   },
                   "server": {
-                    "url": "https://vassante.app.n8n.cloud/webhook/77c056b8-58c9-4957-87a8-371265a22e2f",
+                    "url": "n8n_PRODUCTION_URL_APPEARS_HERE",
                     "timeoutSeconds": 15
                   },
                   "messages": [
@@ -209,10 +209,10 @@
                     "function": {
                       "name": "send_calendar_invite",
                       "arguments": {
-                        "email": "vxk230045@utdallas.edu",
+                        "email": "USER_INPUT_EMAIL_ID_APPEARS_HERE",
                         "timezone": "America/Chicago",
-                        "name": "Vassante Kumar",
-                        "title": "Meeting with Vassante Kumar",
+                        "name": "USER_INPUT_NAME_APPEARS_HERE",
+                        "title": "Meeting with USER_NAME_APPEARS_HERE",
                         "duration": 20,
                         "datetime": "2026-03-25T10:00:00"
                       }
@@ -239,7 +239,7 @@
                   },
                   {
                     "role": "user",
-                    "message": "Vasant Kumar.",
+                    "message": "NAME_INPUT_APPEARS_HERE",
                     "time": 1774334938555,
                     "endTime": 1774334939446,
                     "secondsFromStart": 8.87,
@@ -247,20 +247,20 @@
                     "metadata": {
                       "wordLevelConfidence": [
                         {
-                          "word": "Vasant",
+                          "word": "FIRST_NAME_APPEARS_HERE",
                           "start": 1774334938555,
                           "end": 1774334939000.5,
                           "confidence": 0.873,
                           "language": "",
-                          "punctuated_word": "Vasant"
+                          "punctuated_word": "PUNCTUATED_FIRST_NAME"
                         },
                         {
-                          "word": "Kumar.",
+                          "word": "SECOND_NAME_APPEARS_HERE",
                           "start": 1774334939000.5,
                           "end": 1774334939446,
                           "confidence": 0.9995,
                           "language": "",
-                          "punctuated_word": "Kumar."
+                          "punctuated_word": "PUNCTUATED_SECOND_NAME"
                         }
                       ]
                     }
@@ -276,7 +276,7 @@
                   },
                   {
                     "role": "user",
-                    "message": "v x k two three zero zero four five at u t Dallas dot e d",
+                    "message": "EMAIL_ID_INPUT_APPEARS_HERE",
                     "time": 1774334943517,
                     "endTime": 1774334947526,
                     "secondsFromStart": 13.832,
@@ -284,28 +284,28 @@
                     "metadata": {
                       "wordLevelConfidence": [
                         {
-                          "word": "v",
+                          "word": "EMAIL_ID_FIRST_CHARACTER_APPEARS_HERE",
                           "start": 1774334943517,
                           "end": 1774334943767.5625,
                           "confidence": 0.9985,
                           "language": "",
-                          "punctuated_word": "v"
+                          "punctuated_word": "PUNCTUATED_FIRST_CHARACTER"
                         },
                         {
-                          "word": "x",
+                          "word": "EMAIL_ID_SECOND_CHARACTER_APPEARS_HERE",
                           "start": 1774334943767.5625,
                           "end": 1774334944018.125,
                           "confidence": 0.998,
                           "language": "",
-                          "punctuated_word": "x"
+                          "punctuated_word": "PUNCTUATED_SECOND_CHARACTER"
                         },
                         {
-                          "word": "k",
+                          "word": "EMAIL_ID_THIRD_CHARACTER_APPEARS_HERE",
                           "start": 1774334944018.125,
                           "end": 1774334944268.6875,
                           "confidence": 0.999,
                           "language": "",
-                          "punctuated_word": "k"
+                          "punctuated_word": "PUNCTUATED_THIRD_CHARACTER"
                         },
                         {
                           "word": "two",
@@ -604,7 +604,7 @@
                   },
                   {
                     "role": "bot",
-                    "message": "Let me confirm your name. v a s a n t space. k u m a r that correct?",
+                    "message": "Let me confirm your name. PUNCTUATED_FIRST_NAME space. PUNCTUATED_LAST_NAME that correct?",
                     "time": 1774334970168,
                     "endTime": 1774334975765,
                     "secondsFromStart": 40.483,
@@ -613,7 +613,7 @@
                   },
                   {
                     "role": "user",
-                    "message": "No. It's v a s s a n t e space k u m a r.",
+                    "message": "No. It's PUNCTUATED_FIRST_NAME space PUNCTUATED_LAST_NAME.",
                     "time": 1774334976954,
                     "endTime": 1774334981686,
                     "secondsFromStart": 47.269,
@@ -637,68 +637,68 @@
                           "punctuated_word": "It's"
                         },
                         {
-                          "word": "v",
+                          "word": "FIRST_NAME_CHAR1",
                           "start": 1774334977545.5,
                           "end": 1774334977841.25,
                           "confidence": 0.999,
                           "language": "",
-                          "punctuated_word": "v"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR1"
                         },
                         {
-                          "word": "a",
+                          "word": "FIRST_NAME_CHAR2",
                           "start": 1774334977841.25,
                           "end": 1774334978137,
                           "confidence": 0.999,
                           "language": "",
-                          "punctuated_word": "a"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR2"
                         },
                         {
-                          "word": "s",
+                          "word": "FIRST_NAME_CHAR3",
                           "start": 1774334978137,
                           "end": 1774334978432.75,
                           "confidence": 1,
                           "language": "",
-                          "punctuated_word": "s"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR3"
                         },
                         {
-                          "word": "s",
+                          "word": "FIRST_NAME_CHAR4",
                           "start": 1774334978432.75,
                           "end": 1774334978728.5,
                           "confidence": 1,
                           "language": "",
-                          "punctuated_word": "s"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR4"
                         },
                         {
-                          "word": "a",
+                          "word": "FIRST_NAME_CHAR5",
                           "start": 1774334978728.5,
                           "end": 1774334979024.25,
                           "confidence": 1,
                           "language": "",
-                          "punctuated_word": "a"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR5"
                         },
                         {
-                          "word": "n",
+                          "word": "FIRST_NAME_CHAR6",
                           "start": 1774334979024.25,
                           "end": 1774334979320,
                           "confidence": 0.999,
                           "language": "",
-                          "punctuated_word": "n"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR6"
                         },
                         {
-                          "word": "t",
+                          "word": "FIRST_NAME_CHAR7",
                           "start": 1774334979320,
                           "end": 1774334979615.75,
                           "confidence": 0.9893,
                           "language": "",
-                          "punctuated_word": "t"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR7"
                         },
                         {
-                          "word": "e",
+                          "word": "FIRST_NAME_CHAR8",
                           "start": 1774334979615.75,
                           "end": 1774334979911.5,
                           "confidence": 1,
                           "language": "",
-                          "punctuated_word": "e"
+                          "punctuated_word": "PUNC_FIRST_NAME_CHAR8"
                         },
                         {
                           "word": "space",
@@ -709,51 +709,51 @@
                           "punctuated_word": "space"
                         },
                         {
-                          "word": "k",
+                          "word": "LAST_NAME_CHAR1",
                           "start": 1774334980207.25,
                           "end": 1774334980503,
                           "confidence": 0.9893,
                           "language": "",
-                          "punctuated_word": "k"
+                          "punctuated_word": "PUNC_LAST_NAME_CHAR1"
                         },
                         {
-                          "word": "u",
+                          "word": "LAST_NAME_CHAR2",
                           "start": 1774334980503,
                           "end": 1774334980798.75,
                           "confidence": 0.5396,
                           "language": "",
-                          "punctuated_word": "u"
+                          "punctuated_word": "PUNC_LAST_NAME_CHAR2"
                         },
                         {
-                          "word": "m",
+                          "word": "LAST_NAME_CHAR3",
                           "start": 1774334980798.75,
                           "end": 1774334981094.5,
                           "confidence": 1,
                           "language": "",
-                          "punctuated_word": "m"
+                          "punctuated_word": "PUNC_LAST_NAME_CHAR3"
                         },
                         {
-                          "word": "a",
+                          "word": "LAST_NAME_CHAR4",
                           "start": 1774334981094.5,
                           "end": 1774334981390.25,
                           "confidence": 0.9985,
                           "language": "",
-                          "punctuated_word": "a"
+                          "punctuated_word": "PUNC_LAST_NAME_CHAR4"
                         },
                         {
-                          "word": "r.",
+                          "word": "LAST_NAME_CHAR5.",
                           "start": 1774334981390.25,
                           "end": 1774334981686,
                           "confidence": 1,
                           "language": "",
-                          "punctuated_word": "r."
+                          "punctuated_word": "PUNC_LAST_NAME_CHAR5."
                         }
                       ]
                     }
                   },
                   {
                     "role": "bot",
-                    "message": "Got it. Let me update that. v a s s a n t e space k u m a r. Is that correct?",
+                    "message": "Got it. Let me update that. PUNCTUATED_FIRST_NAME space PUNCTUATED_LAST_NAME. Is that correct?",
                     "time": 1774334983430,
                     "endTime": 1774334989365,
                     "secondsFromStart": 53.745,
@@ -782,7 +782,7 @@
                   },
                   {
                     "role": "bot",
-                    "message": "Let me confirm your email, v x k two three zero zero four four five at u t Dallas dot e d. Is that correct?",
+                    "message": "Let me confirm your email, PUNCTUATED_EMAIL_ID_APPEARS_HERE. Is that correct?",
                     "time": 1774334992240,
                     "endTime": 1774335000085,
                     "secondsFromStart": 62.555,
@@ -791,7 +791,7 @@
                   },
                   {
                     "role": "user",
-                    "message": "No. It's v x k two three zero zero four five at u t dallas dot e d u.",
+                    "message": "No. It's CORRECTED_PUNCTUATED_EMAIL_ID.",
                     "time": 1774335001186,
                     "endTime": 1774335007766,
                     "secondsFromStart": 71.501,
@@ -815,28 +815,28 @@
                           "punctuated_word": "It's"
                         },
                         {
-                          "word": "v",
+                          "word": "EMAIL_ID_CHAR1",
                           "start": 1774335001878.6316,
                           "end": 1774335002224.9473,
                           "confidence": 0.9985,
                           "language": "",
-                          "punctuated_word": "v"
+                          "punctuated_word": "PUNC_EMAIL_ID_CHAR1"
                         },
                         {
-                          "word": "x",
+                          "word": "EMAIL_ID_CHAR2",
                           "start": 1774335002224.9473,
                           "end": 1774335002571.2632,
                           "confidence": 0.9976,
                           "language": "",
-                          "punctuated_word": "x"
+                          "punctuated_word": "PUNC_EMAIL_ID_CHAR2"
                         },
                         {
-                          "word": "k",
+                          "word": "EMAIL_ID_CHAR3",
                           "start": 1774335002571.2632,
                           "end": 1774335002917.5789,
                           "confidence": 1,
                           "language": "",
-                          "punctuated_word": "k"
+                          "punctuated_word": "PUNC_EMAIL_ID_CHAR3"
                         },
                         {
                           "word": "two",
@@ -955,7 +955,7 @@
                   },
                   {
                     "role": "bot",
-                    "message": "Got it. Let me update that. b x k two three zero zero four five. at UT Dallas dot e d u. Is that correct?",
+                    "message": "Got it. Let me update that. CORRECTED_PUNCTUATED_EMAIL_ID_APPEARS_HERE. Is that correct?",
                     "time": 1774335009181,
                     "endTime": 1774335016725,
                     "secondsFromStart": 79.496,
@@ -1013,7 +1013,7 @@
                   },
                   {
                     "role": "bot",
-                    "message": "And the meeting title is meeting with Vashanti Kumar. Is that correct?",
+                    "message": "And the meeting title is meeting with USER_NAME. Is that correct?",
                     "time": 1774335027733,
                     "endTime": 1774335030805,
                     "secondsFromStart": 98.048,
@@ -1047,7 +1047,7 @@
                         "type": "function",
                         "function": {
                           "name": "send_calendar_invite",
-                          "arguments": "{\n  \"email\": \"vxk230045@utdallas.edu\",\n  \"timezone\": \"America/Chicago\",\n  \"name\": \"Vassante Kumar\",\n  \"title\": \"Meeting with Vassante Kumar\",\n  \"duration\": 20,\n  \"datetime\": \"2026-03-25T10:00:00\"\n}"
+                          "arguments": "{\n  \"email\": \"EMAIL_ID\",\n  \"timezone\": \"America/Chicago\",\n  \"name\": \"USER_NAME\",\n  \"title\": \"Meeting with USER_NAME\",\n  \"duration\": 20,\n  \"datetime\": \"2026-03-25T10:00:00\"\n}"
                         }
                       }
                     ],
@@ -1068,7 +1068,7 @@
                   },
                   {
                     "role": "user",
-                    "content": "Vasant Kumar."
+                    "content": "USER_NAME_INPUT"
                   },
                   {
                     "role": "assistant",
@@ -1076,7 +1076,7 @@
                   },
                   {
                     "role": "user",
-                    "content": "v x k two three zero zero four five at u t Dallas dot e d"
+                    "content": "EMAIL_ID_INPUT"
                   },
                   {
                     "role": "assistant",
@@ -1112,15 +1112,15 @@
                   },
                   {
                     "role": "assistant",
-                    "content": "Let me confirm your name. v a s a n t space. k u m a r that correct?"
+                    "content": "Let me confirm your name. PUNCTUATED_FIRST_NAME space. PUNCTUATED_LAST_NAME that correct?"
                   },
                   {
                     "role": "user",
-                    "content": "No. It's v a s s a n t e space k u m a r."
+                    "content": "No. It's CORRECTED_PUNCTUATED_FIRST_NAME space CORRECTED_PUNCTUATED_LAST_NAME."
                   },
                   {
                     "role": "assistant",
-                    "content": "Got it. Let me update that. v a s s a n t e space k u m a r. Is that correct?"
+                    "content": "Got it. Let me update that. CORRECTED_PUNCTUATED_FIRST_NAME space CORRECTED_PUNCTUATED_LAST_NAME. Is that correct?"
                   },
                   {
                     "role": "user",
@@ -1128,15 +1128,15 @@
                   },
                   {
                     "role": "assistant",
-                    "content": "Let me confirm your email, v x k two three zero zero four four five at u t Dallas dot e d. Is that correct?"
+                    "content": "Let me confirm your email, PUNCTUATED_EMAIL_ID. Is that correct?"
                   },
                   {
                     "role": "user",
-                    "content": "No. It's v x k two three zero zero four five at u t dallas dot e d u."
+                    "content": "No. It's CORRECTED_PUNCTUATED_EMAIL_ID."
                   },
                   {
                     "role": "assistant",
-                    "content": "Got it. Let me update that. b x k two three zero zero four five. at UT Dallas dot e d u. Is that correct?"
+                    "content": "Got it. Let me update that. CORRECTED_PUNCTUATED_EMAIL_ID. Is that correct?"
                   },
                   {
                     "role": "user",
@@ -1152,7 +1152,7 @@
                   },
                   {
                     "role": "assistant",
-                    "content": "And the meeting title is meeting with Vashanti Kumar. Is that correct?"
+                    "content": "And the meeting title is meeting with USER_NAME. Is that correct?"
                   },
                   {
                     "role": "user",
@@ -1166,7 +1166,7 @@
                         "type": "function",
                         "function": {
                           "name": "send_calendar_invite",
-                          "arguments": "{\n  \"email\": \"vxk230045@utdallas.edu\",\n  \"timezone\": \"America/Chicago\",\n  \"name\": \"Vassante Kumar\",\n  \"title\": \"Meeting with Vassante Kumar\",\n  \"duration\": 20,\n  \"datetime\": \"2026-03-25T10:00:00\"\n}"
+                          "arguments": "{\n  \"email\": \"EMAIL_ID\",\n  \"timezone\": \"America/Chicago\",\n  \"name\": \"USER_NAME\",\n  \"title\": \"Meeting with USER_NAME\",\n  \"duration\": 20,\n  \"datetime\": \"2026-03-25T10:00:00\"\n}"
                         }
                       }
                     ]
@@ -1386,7 +1386,7 @@
               }
             }
           },
-          "webhookUrl": "https://vassante.app.n8n.cloud/webhook/77c056b8-58c9-4957-87a8-371265a22e2f",
+          "webhookUrl": "n8n_PRODUCTION_URL",
           "executionMode": "production"
         },
         "pairedItem": {
