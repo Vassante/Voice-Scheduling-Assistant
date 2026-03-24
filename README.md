@@ -2,7 +2,7 @@
 A Voice AI assistant to help you schedule meetings
 
 ## Deployed Link: 
-[Test the Scheduling Agent Here](https://vapi.ai/?demo=true&shareKey=4cf33ecf-7b5e-4d58-a145-c8c79a55982d&assistantId=bf7df150-413b-4329-b9f4-40527caf78de)
+Test the Scheduling Agent Here: [VAPI Live Demo](https://vapi.ai/?demo=true&shareKey=4cf33ecf-7b5e-4d58-a145-c8c79a55982d&assistantId=bf7df150-413b-4329-b9f4-40527caf78de)
 
 ## The Tech Stack:
     Voice Orchestration: VAPI
