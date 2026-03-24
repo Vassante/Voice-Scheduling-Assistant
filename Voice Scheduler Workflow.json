@@ -39,7 +39,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer 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"
+              "value": "Bearer INSERT_YOUR_SENDGRID_API_KEY_HERE"
             },
             {
               "name": "Content-Type",
