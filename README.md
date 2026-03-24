@@ -17,8 +17,8 @@ A Voice AI assistant to help you schedule meetings
 2. Provide your Details: The agent will ask for your Name, Email, Preferred Date/Time, and Duration of the meeting.
 3. Confirm the Details: Once you confirm the details, the agent will trigger a background workflow.
 4. Check your Email: Within seconds, you will receive an email from vxk230045@utdallas.edu containing:
-  - Direct Google Calendar and Outlook "Add" links.
-  - A standards-compliant .ics attachment compatible with Apple Calendar and mobile devices.
+    - Direct Google Calendar and Outlook "Add" links.
+    - A standards-compliant .ics attachment compatible with Apple Calendar and mobile devices.
 
 ## Calendar Integration Logic:
 The core of this project lies in the transition from Voice Intent to Calendar Data.
