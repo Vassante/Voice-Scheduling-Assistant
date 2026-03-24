@@ -27,7 +27,7 @@ The core of this project lies in the transition from Voice Intent to Calendar Da
     **ICS Generation:** To ensure universal compatibility, the system dynamically builds an RFC 5545 .ics file using CRLF line endings and the METHOD:REQUEST\ header. This allows the email to be recognized as a formal "Meeting Invite" by Gmail and Outlook.
 
 ## Proof of Concept:
-- [Live Event Creation Video:](https://www.loom.com/share/9a6de48b8e484dcfa078362be7eee051)
+- Live Event Creation Video:[View the Loom video here](https://www.loom.com/share/9a6de48b8e484dcfa078362be7eee051)
 - **VAPI Execution Logs:** <img width="1854" height="1028" alt="execution_logs_vapi" src="https://github.com/user-attachments/assets/d4125bcf-5b73-408e-87f9-f2c05c226e1f" />
 - **n8n Execution Logs:** <img width="1857" height="1030" alt="execution_logs_n8n" src="https://github.com/user-attachments/assets/426e1fd6-8d19-4dbc-97fb-54fad7896a10" />
 - **SendGrid Execution Logs:** <img width="1856" height="1031" alt="execution_logs_sendgrid" src="https://github.com/user-attachments/assets/df1a295c-c2f7-43f0-b2c9-66bef0e9622c" />
