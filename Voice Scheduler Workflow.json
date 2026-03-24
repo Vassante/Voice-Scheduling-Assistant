@@ -1,0 +1,1433 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "77c056b8-58c9-4957-87a8-371265a22e2f",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9be3c720-767f-4631-9c0c-c835f659120f",
+      "name": "Webhook",
+      "webhookId": "77c056b8-58c9-4957-87a8-371265a22e2f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// 1. Robust VAPI parsing (keeping your existing logic)\nlet args;\nconst rawArgs = \n  data?.body?.message?.toolCalls?.[0]?.function?.arguments ||\n  data?.body?.toolCallList?.[0]?.function?.arguments ||\n  data?.body?.toolWithToolCallList?.[0]?.toolCall?.function?.arguments;\n\nif (rawArgs) {\n  args = typeof rawArgs === 'string' ? JSON.parse(rawArgs) : rawArgs;\n} else {\n  args = data?.body || data;\n}\n\nif (!args?.datetime) {\n  throw new Error(`datetime missing. Full args: ${JSON.stringify(args)}`);\n}\n\n// 2. Clean inputs (Vapi can sometimes return leading/trailing spaces)\nconst name = (args.name || 'Guest').trim();\nconst email = (args.email || '').trim();\nconst datetime = args.datetime.trim();\nconst durationMinutes = parseInt(args.duration) || 60;\nconst timezone = (args.timezone || 'America/Chicago').trim();\nconst title = (args.title || `Meeting with ${name}`).trim();\n\n// 3. Time Parsing (Keeping your direct split logic)\nconst [datePart, timePart] = datetime.split('T');\nconst [year, month, day] = datePart.split('-');\nconst [hour, minute] = timePart.split(':');\n\nconst startTotalMinutes = parseInt(hour) * 60 + parseInt(minute);\nconst endTotalMinutes = startTotalMinutes + durationMinutes;\nconst endHour = String(Math.floor(endTotalMinutes / 60) % 24).padStart(2, '0');\nconst endMinute = String(endTotalMinutes % 60).padStart(2, '0');\n\nconst dtStart = `${year}${month}${day}T${hour}${minute}00`;\nconst dtEnd = `${year}${month}${day}T${endHour}${endMinute}00`;\n\n// 4. Build ICS with strict CRLF\nconst icsLines = [\n  'BEGIN:VCALENDAR',\n  'VERSION:2.0',\n  'PRODID:-//Voice Scheduler//EN',\n  'METHOD:REQUEST', // Critical for actionability\n  'BEGIN:VEVENT',\n  `UID:${Date.now()}@voicescheduler`,\n  `DTSTAMP:${dtStart}Z`,\n  `SUMMARY:${title}`,\n  `DTSTART;TZID=${timezone}:${dtStart}`,\n  `DTEND;TZID=${timezone}:${dtEnd}`,\n  `ORGANIZER;CN=${name}:mailto:${email}`,\n  `ATTENDEE;CN=${name};RSVP=TRUE:mailto:${email}`,\n  'STATUS:CONFIRMED',\n  'SEQUENCE:0',\n  'BEGIN:VALARM',\n  'TRIGGER:-PT15M',\n  'ACTION:DISPLAY',\n  'DESCRIPTION:Reminder',\n  'END:VALARM',\n  'END:VEVENT',\n  'END:VCALENDAR'\n];\n\nconst icsString = icsLines.join('\\r\\n');\nconst icsBase64 = Buffer.from(icsString, 'utf8').toString('base64');\n\n// 5. Build Links (same as before)\nconst gcalLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dtStart}/${dtEnd}&ctz=${encodeURIComponent(timezone)}`;\n\n// 6. Refined SendGrid Payload\nconst sendgridPayload = {\n  personalizations: [{\n    to: [{ email: email }],\n    subject: `Your Meeting: ${title}`\n  }],\n  from: { email: \"vxk230045@utdallas.edu\" },\n  content: [{\n    type: \"text/html\",\n    value: `<p>Hi ${name},</p><p>Your meeting is confirmed. Please see the attached calendar invite.</p><p><a href=\"${gcalLink}\">Add to Google Calendar</a></p>`\n  }],\n  attachments: [{\n    content: icsBase64,\n    filename: \"invite.ics\",\n    type: \"text/calendar; method=REQUEST\", // Updated type\n    disposition: \"attachment\"\n  }]\n};\n\nreturn [{ json: { sendgridPayload } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8949eed3-2f61-4e68-ada3-eb3fc7f0b739",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.sendgrid.com/v3/mail/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.sendgridPayload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d88883ce-3c14-4d80-be4f-7f382d3efca2",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vassante.app.n8n.cloud",
+            "user-agent": "axios/1.8.3",
+            "content-length": "28348",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, br",
+            "baggage": "sentry-environment=production,sentry-public_key=a0021577936aec367b16615ad816c078,sentry-trace_id=086ab55a7c494d65bf4d8b1d1dd48f1d",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "44.255.204.77",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9e13be4aed999976-PDX",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "cookie": "callId=019d1e9a-69de-7334-b8c4-ef6608233eb8",
+            "sentry-trace": "086ab55a7c494d65bf4d8b1d1dd48f1d-ab25b8935cbdf9f6",
+            "x-call-id": "019d1e9a-69de-7334-b8c4-ef6608233eb8",
+            "x-forwarded-for": "44.255.204.77, 172.68.174.86",
+            "x-forwarded-host": "vassante.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-102-586899fc8f-xzsw7",
+            "x-is-trusted": "yes",
+            "x-real-ip": "44.255.204.77",
+            "x-vapi-secret": ""
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": {
+              "timestamp": 1774335044197,
+              "type": "tool-calls",
+              "toolCalls": [
+                {
+                  "id": "1774335044192-iqlmtk10k",
+                  "type": "function",
+                  "function": {
+                    "name": "send_calendar_invite",
+                    "arguments": {
+                      "email": "vxk230045@utdallas.edu",
+                      "timezone": "America/Chicago",
+                      "name": "Vassante Kumar",
+                      "title": "Meeting with Vassante Kumar",
+                      "duration": 20,
+                      "datetime": "2026-03-25T10:00:00"
+                    }
+                  }
+                }
+              ],
+              "toolCallList": [
+                {
+                  "id": "1774335044192-iqlmtk10k",
+                  "type": "function",
+                  "function": {
+                    "name": "send_calendar_invite",
+                    "arguments": {
+                      "email": "vxk230045@utdallas.edu",
+                      "timezone": "America/Chicago",
+                      "name": "Vassante Kumar",
+                      "title": "Meeting with Vassante Kumar",
+                      "duration": 20,
+                      "datetime": "2026-03-25T10:00:00"
+                    }
+                  }
+                }
+              ],
+              "toolWithToolCallList": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "send_calendar_invite",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "email",
+                        "datetime",
+                        "duration",
+                        "timezone",
+                        "title"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "default": "",
+                          "description": "The full name of the user"
+                        },
+                        "email": {
+                          "type": "string",
+                          "default": "",
+                          "description": "The email address of the user"
+                        },
+                        "title": {
+                          "type": "string",
+                          "default": "",
+                          "description": "Meeting title or \"Meeting with [name]\" if not provided"
+                        },
+                        "datetime": {
+                          "type": "string",
+                          "default": "",
+                          "description": "Meeting date and time in YYYY-MM-DDTHH:MM:SS format"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "default": "",
+                          "description": "Duration in minutes. 30 minutes → 30, 1 hour → 60, 2 hours → 120"
+                        },
+                        "timezone": {
+                          "type": "string",
+                          "default": "",
+                          "description": "IANA timezone string e.g. America/Chicago, America/New_York"
+                        }
+                      }
+                    },
+                    "description": "Call this tool after you have collected and confirmed all details from the user: name, email, datetime, duration, timezone and title. Only call once user confirms everything is correct."
+                  },
+                  "server": {
+                    "url": "https://vassante.app.n8n.cloud/webhook/77c056b8-58c9-4957-87a8-371265a22e2f",
+                    "timeoutSeconds": 15
+                  },
+                  "messages": [
+                    {
+                      "type": "request-start",
+                      "contents": [],
+                      "conditions": [],
+                      "blocking": false
+                    }
+                  ],
+                  "variableExtractionPlan": {
+                    "schema": {
+                      "type": "object",
+                      "required": [],
+                      "properties": {}
+                    }
+                  },
+                  "toolCall": {
+                    "id": "1774335044192-iqlmtk10k",
+                    "type": "function",
+                    "function": {
+                      "name": "send_calendar_invite",
+                      "arguments": {
+                        "email": "vxk230045@utdallas.edu",
+                        "timezone": "America/Chicago",
+                        "name": "Vassante Kumar",
+                        "title": "Meeting with Vassante Kumar",
+                        "duration": 20,
+                        "datetime": "2026-03-25T10:00:00"
+                      }
+                    }
+                  }
+                }
+              ],
+              "artifact": {
+                "messages": [
+                  {
+                    "role": "system",
+                    "message": "You are a scheduling assistant. Follow these steps EXACTLY \nin order. Do not skip or combine steps.\n\nSTEP 1 - COLLECT NAME:\nAsk: \"Can I start with your full name?\"\nWait for response. Store the name exactly as given.\n\nSTEP 2 - COLLECT EMAIL:\nAsk: \"What is your email address?\"\nWait for response. Store exactly as given including \nnumbers as digits (e.g. if user says \"two three\" \nstore as \"23\", if user says \"2 3\" store as \"23\").\n\nSTEP 3 - COLLECT TIMEZONE:\nAsk: \"What is your timezone?\"\nConvert to IANA format:\n- \"Central\" or \"CST\" → America/Chicago\n- \"Eastern\" or \"EST\" → America/New_York\n- \"Pacific\" or \"PST\" → America/Los_Angeles\n- \"IST\" or \"India\" → Asia/Kolkata\n- \"GMT\" or \"UK\" → Europe/London\n\nSTEP 4 - COLLECT DATE AND TIME:\nAsk: \"What date and time would you like the meeting?\"\nCurrent date and time is Mar 24, 2026, 6:48 AM UTC.\nUse this to calculate relative dates like \"tomorrow\" \nor \"next Friday\". Always confirm the exact date.\n\nSTEP 5 - COLLECT TITLE:\nAsk: \"What would you like to call ...",
+                    "time": 1774334929517,
+                    "secondsFromStart": 0
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Hi. I'm your scheduling assistant. I'll help you set up a calendar invite in just a minute. Can I start with your name?",
+                    "time": 1774334931118,
+                    "endTime": 1774334936885,
+                    "secondsFromStart": 1.433,
+                    "duration": 5767,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Vasant Kumar.",
+                    "time": 1774334938555,
+                    "endTime": 1774334939446,
+                    "secondsFromStart": 8.87,
+                    "duration": 891,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Vasant",
+                          "start": 1774334938555,
+                          "end": 1774334939000.5,
+                          "confidence": 0.873,
+                          "language": "",
+                          "punctuated_word": "Vasant"
+                        },
+                        {
+                          "word": "Kumar.",
+                          "start": 1774334939000.5,
+                          "end": 1774334939446,
+                          "confidence": 0.9995,
+                          "language": "",
+                          "punctuated_word": "Kumar."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "What is your email address?",
+                    "time": 1774334940747,
+                    "endTime": 1774334941525,
+                    "secondsFromStart": 11.062,
+                    "duration": 778,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "v x k two three zero zero four five at u t Dallas dot e d",
+                    "time": 1774334943517,
+                    "endTime": 1774334947526,
+                    "secondsFromStart": 13.832,
+                    "duration": 4009,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "v",
+                          "start": 1774334943517,
+                          "end": 1774334943767.5625,
+                          "confidence": 0.9985,
+                          "language": "",
+                          "punctuated_word": "v"
+                        },
+                        {
+                          "word": "x",
+                          "start": 1774334943767.5625,
+                          "end": 1774334944018.125,
+                          "confidence": 0.998,
+                          "language": "",
+                          "punctuated_word": "x"
+                        },
+                        {
+                          "word": "k",
+                          "start": 1774334944018.125,
+                          "end": 1774334944268.6875,
+                          "confidence": 0.999,
+                          "language": "",
+                          "punctuated_word": "k"
+                        },
+                        {
+                          "word": "two",
+                          "start": 1774334944268.6875,
+                          "end": 1774334944519.25,
+                          "confidence": 0.668,
+                          "language": "",
+                          "punctuated_word": "two"
+                        },
+                        {
+                          "word": "three",
+                          "start": 1774334944519.25,
+                          "end": 1774334944769.8125,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "three"
+                        },
+                        {
+                          "word": "zero",
+                          "start": 1774334944769.8125,
+                          "end": 1774334945020.375,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "zero"
+                        },
+                        {
+                          "word": "zero",
+                          "start": 1774334945020.375,
+                          "end": 1774334945270.9375,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "zero"
+                        },
+                        {
+                          "word": "four",
+                          "start": 1774334945270.9375,
+                          "end": 1774334945521.5,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "four"
+                        },
+                        {
+                          "word": "five",
+                          "start": 1774334945521.5,
+                          "end": 1774334945772.0625,
+                          "confidence": 0.9966,
+                          "language": "",
+                          "punctuated_word": "five"
+                        },
+                        {
+                          "word": "at",
+                          "start": 1774334945772.0625,
+                          "end": 1774334946022.625,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "at"
+                        },
+                        {
+                          "word": "u",
+                          "start": 1774334946022.625,
+                          "end": 1774334946273.1875,
+                          "confidence": 0.6147,
+                          "language": "",
+                          "punctuated_word": "u"
+                        },
+                        {
+                          "word": "t",
+                          "start": 1774334946273.1875,
+                          "end": 1774334946523.75,
+                          "confidence": 0.999,
+                          "language": "",
+                          "punctuated_word": "t"
+                        },
+                        {
+                          "word": "Dallas",
+                          "start": 1774334946523.75,
+                          "end": 1774334946774.3125,
+                          "confidence": 0.9434,
+                          "language": "",
+                          "punctuated_word": "Dallas"
+                        },
+                        {
+                          "word": "dot",
+                          "start": 1774334946774.3125,
+                          "end": 1774334947024.875,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "dot"
+                        },
+                        {
+                          "word": "e",
+                          "start": 1774334947024.875,
+                          "end": 1774334947275.4375,
+                          "confidence": 0.9761,
+                          "language": "",
+                          "punctuated_word": "e"
+                        },
+                        {
+                          "word": "d",
+                          "start": 1774334947275.4375,
+                          "end": 1774334947526,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "d"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "What is your time zone?",
+                    "time": 1774334948960,
+                    "endTime": 1774334949365,
+                    "secondsFromStart": 19.275,
+                    "duration": 405,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Central Standard Time.",
+                    "time": 1774334951597,
+                    "endTime": 1774334952166,
+                    "secondsFromStart": 21.912,
+                    "duration": 569,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Central",
+                          "start": 1774334951597,
+                          "end": 1774334951786.6667,
+                          "confidence": 0.8276,
+                          "language": "",
+                          "punctuated_word": "Central"
+                        },
+                        {
+                          "word": "Standard",
+                          "start": 1774334951786.6667,
+                          "end": 1774334951976.3333,
+                          "confidence": 0.9932,
+                          "language": "",
+                          "punctuated_word": "Standard"
+                        },
+                        {
+                          "word": "Time.",
+                          "start": 1774334951976.3333,
+                          "end": 1774334952166,
+                          "confidence": 0.9995,
+                          "language": "",
+                          "punctuated_word": "Time."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "What date and time would you like the meeting?",
+                    "time": 1774334953427,
+                    "endTime": 1774334954805,
+                    "secondsFromStart": 23.742,
+                    "duration": 1378,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Tomorrow at ten AM.",
+                    "time": 1774334956720,
+                    "endTime": 1774334958246,
+                    "secondsFromStart": 27.035,
+                    "duration": 1526,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Tomorrow",
+                          "start": 1774334956720,
+                          "end": 1774334957101.5,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "Tomorrow"
+                        },
+                        {
+                          "word": "at",
+                          "start": 1774334957101.5,
+                          "end": 1774334957483,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "at"
+                        },
+                        {
+                          "word": "ten",
+                          "start": 1774334957483,
+                          "end": 1774334957864.5,
+                          "confidence": 0.9995,
+                          "language": "",
+                          "punctuated_word": "ten"
+                        },
+                        {
+                          "word": "AM.",
+                          "start": 1774334957864.5,
+                          "end": 1774334958246,
+                          "confidence": 0.9995,
+                          "language": "",
+                          "punctuated_word": "AM."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "What would you like to call this meeting?",
+                    "time": 1774334959620,
+                    "endTime": 1774334961205,
+                    "secondsFromStart": 29.935,
+                    "duration": 1585,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Anything is fine.",
+                    "time": 1774334963721,
+                    "endTime": 1774334964246,
+                    "secondsFromStart": 34.036,
+                    "duration": 525,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Anything",
+                          "start": 1774334963721,
+                          "end": 1774334963896,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "Anything"
+                        },
+                        {
+                          "word": "is",
+                          "start": 1774334963896,
+                          "end": 1774334964071,
+                          "confidence": 0.6133,
+                          "language": "",
+                          "punctuated_word": "is"
+                        },
+                        {
+                          "word": "fine.",
+                          "start": 1774334964071,
+                          "end": 1774334964246,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "fine."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "How long will the meeting be?",
+                    "time": 1774334965507,
+                    "endTime": 1774334966325,
+                    "secondsFromStart": 35.822,
+                    "duration": 818,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "For twenty minutes.",
+                    "time": 1774334968069,
+                    "endTime": 1774334968806,
+                    "secondsFromStart": 38.384,
+                    "duration": 737,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "For",
+                          "start": 1774334968069,
+                          "end": 1774334968314.6667,
+                          "confidence": 0.8228,
+                          "language": "",
+                          "punctuated_word": "For"
+                        },
+                        {
+                          "word": "twenty",
+                          "start": 1774334968314.6667,
+                          "end": 1774334968560.3333,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "twenty"
+                        },
+                        {
+                          "word": "minutes.",
+                          "start": 1774334968560.3333,
+                          "end": 1774334968806,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "minutes."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Let me confirm your name. v a s a n t space. k u m a r that correct?",
+                    "time": 1774334970168,
+                    "endTime": 1774334975765,
+                    "secondsFromStart": 40.483,
+                    "duration": 2680,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "No. It's v a s s a n t e space k u m a r.",
+                    "time": 1774334976954,
+                    "endTime": 1774334981686,
+                    "secondsFromStart": 47.269,
+                    "duration": 4732,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "No.",
+                          "start": 1774334976954,
+                          "end": 1774334977249.75,
+                          "confidence": 0.9863,
+                          "language": "",
+                          "punctuated_word": "No."
+                        },
+                        {
+                          "word": "It's",
+                          "start": 1774334977249.75,
+                          "end": 1774334977545.5,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "It's"
+                        },
+                        {
+                          "word": "v",
+                          "start": 1774334977545.5,
+                          "end": 1774334977841.25,
+                          "confidence": 0.999,
+                          "language": "",
+                          "punctuated_word": "v"
+                        },
+                        {
+                          "word": "a",
+                          "start": 1774334977841.25,
+                          "end": 1774334978137,
+                          "confidence": 0.999,
+                          "language": "",
+                          "punctuated_word": "a"
+                        },
+                        {
+                          "word": "s",
+                          "start": 1774334978137,
+                          "end": 1774334978432.75,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "s"
+                        },
+                        {
+                          "word": "s",
+                          "start": 1774334978432.75,
+                          "end": 1774334978728.5,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "s"
+                        },
+                        {
+                          "word": "a",
+                          "start": 1774334978728.5,
+                          "end": 1774334979024.25,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "a"
+                        },
+                        {
+                          "word": "n",
+                          "start": 1774334979024.25,
+                          "end": 1774334979320,
+                          "confidence": 0.999,
+                          "language": "",
+                          "punctuated_word": "n"
+                        },
+                        {
+                          "word": "t",
+                          "start": 1774334979320,
+                          "end": 1774334979615.75,
+                          "confidence": 0.9893,
+                          "language": "",
+                          "punctuated_word": "t"
+                        },
+                        {
+                          "word": "e",
+                          "start": 1774334979615.75,
+                          "end": 1774334979911.5,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "e"
+                        },
+                        {
+                          "word": "space",
+                          "start": 1774334979911.5,
+                          "end": 1774334980207.25,
+                          "confidence": 0.9995,
+                          "language": "",
+                          "punctuated_word": "space"
+                        },
+                        {
+                          "word": "k",
+                          "start": 1774334980207.25,
+                          "end": 1774334980503,
+                          "confidence": 0.9893,
+                          "language": "",
+                          "punctuated_word": "k"
+                        },
+                        {
+                          "word": "u",
+                          "start": 1774334980503,
+                          "end": 1774334980798.75,
+                          "confidence": 0.5396,
+                          "language": "",
+                          "punctuated_word": "u"
+                        },
+                        {
+                          "word": "m",
+                          "start": 1774334980798.75,
+                          "end": 1774334981094.5,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "m"
+                        },
+                        {
+                          "word": "a",
+                          "start": 1774334981094.5,
+                          "end": 1774334981390.25,
+                          "confidence": 0.9985,
+                          "language": "",
+                          "punctuated_word": "a"
+                        },
+                        {
+                          "word": "r.",
+                          "start": 1774334981390.25,
+                          "end": 1774334981686,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "r."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Got it. Let me update that. v a s s a n t e space k u m a r. Is that correct?",
+                    "time": 1774334983430,
+                    "endTime": 1774334989365,
+                    "secondsFromStart": 53.745,
+                    "duration": 5935,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Yes.",
+                    "time": 1774334990345,
+                    "endTime": 1774334990646,
+                    "secondsFromStart": 60.66,
+                    "duration": 301,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Yes.",
+                          "start": 1774334990345,
+                          "end": 1774334990646,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "Yes."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Let me confirm your email, v x k two three zero zero four four five at u t Dallas dot e d. Is that correct?",
+                    "time": 1774334992240,
+                    "endTime": 1774335000085,
+                    "secondsFromStart": 62.555,
+                    "duration": 7845,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "No. It's v x k two three zero zero four five at u t dallas dot e d u.",
+                    "time": 1774335001186,
+                    "endTime": 1774335007766,
+                    "secondsFromStart": 71.501,
+                    "duration": 6580,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "No.",
+                          "start": 1774335001186,
+                          "end": 1774335001532.3157,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "No."
+                        },
+                        {
+                          "word": "It's",
+                          "start": 1774335001532.3157,
+                          "end": 1774335001878.6316,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "It's"
+                        },
+                        {
+                          "word": "v",
+                          "start": 1774335001878.6316,
+                          "end": 1774335002224.9473,
+                          "confidence": 0.9985,
+                          "language": "",
+                          "punctuated_word": "v"
+                        },
+                        {
+                          "word": "x",
+                          "start": 1774335002224.9473,
+                          "end": 1774335002571.2632,
+                          "confidence": 0.9976,
+                          "language": "",
+                          "punctuated_word": "x"
+                        },
+                        {
+                          "word": "k",
+                          "start": 1774335002571.2632,
+                          "end": 1774335002917.5789,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "k"
+                        },
+                        {
+                          "word": "two",
+                          "start": 1774335002917.5789,
+                          "end": 1774335003263.8948,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "two"
+                        },
+                        {
+                          "word": "three",
+                          "start": 1774335003263.8948,
+                          "end": 1774335003610.2104,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "three"
+                        },
+                        {
+                          "word": "zero",
+                          "start": 1774335003610.2104,
+                          "end": 1774335003956.5264,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "zero"
+                        },
+                        {
+                          "word": "zero",
+                          "start": 1774335003956.5264,
+                          "end": 1774335004302.842,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "zero"
+                        },
+                        {
+                          "word": "four",
+                          "start": 1774335004302.842,
+                          "end": 1774335004649.158,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "four"
+                        },
+                        {
+                          "word": "five",
+                          "start": 1774335004649.158,
+                          "end": 1774335004995.4736,
+                          "confidence": 0.999,
+                          "language": "",
+                          "punctuated_word": "five"
+                        },
+                        {
+                          "word": "at",
+                          "start": 1774335004995.4736,
+                          "end": 1774335005341.7896,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "at"
+                        },
+                        {
+                          "word": "u",
+                          "start": 1774335005341.7896,
+                          "end": 1774335005688.1052,
+                          "confidence": 0.4622,
+                          "language": "",
+                          "punctuated_word": "u"
+                        },
+                        {
+                          "word": "t",
+                          "start": 1774335005688.1052,
+                          "end": 1774335006034.4211,
+                          "confidence": 0.9985,
+                          "language": "",
+                          "punctuated_word": "t"
+                        },
+                        {
+                          "word": "dallas",
+                          "start": 1774335006034.4211,
+                          "end": 1774335006380.7368,
+                          "confidence": 0.9966,
+                          "language": "",
+                          "punctuated_word": "dallas"
+                        },
+                        {
+                          "word": "dot",
+                          "start": 1774335006380.7368,
+                          "end": 1774335006727.0527,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "dot"
+                        },
+                        {
+                          "word": "e",
+                          "start": 1774335006727.0527,
+                          "end": 1774335007073.3684,
+                          "confidence": 0.9951,
+                          "language": "",
+                          "punctuated_word": "e"
+                        },
+                        {
+                          "word": "d",
+                          "start": 1774335007073.3684,
+                          "end": 1774335007419.6843,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "d"
+                        },
+                        {
+                          "word": "u.",
+                          "start": 1774335007419.6843,
+                          "end": 1774335007766,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "u."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Got it. Let me update that. b x k two three zero zero four five. at UT Dallas dot e d u. Is that correct?",
+                    "time": 1774335009181,
+                    "endTime": 1774335016725,
+                    "secondsFromStart": 79.496,
+                    "duration": 4825,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Yes.",
+                    "time": 1774335017611,
+                    "endTime": 1774335017846,
+                    "secondsFromStart": 87.926,
+                    "duration": 235,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Yes.",
+                          "start": 1774335017611,
+                          "end": 1774335017846,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "Yes."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Tomorrow, Wednesday, March twenty fifth at ten AM. America Chicago for twenty minutes. that correct?",
+                    "time": 1774335019381,
+                    "endTime": 1774335024645,
+                    "secondsFromStart": 89.696,
+                    "duration": 2569,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Yes.",
+                    "time": 1774335025731,
+                    "endTime": 1774335025846,
+                    "secondsFromStart": 96.046,
+                    "duration": 115,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Yes.",
+                          "start": 1774335025731,
+                          "end": 1774335025846,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "Yes."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "And the meeting title is meeting with Vashanti Kumar. Is that correct?",
+                    "time": 1774335027733,
+                    "endTime": 1774335030805,
+                    "secondsFromStart": 98.048,
+                    "duration": 3072,
+                    "source": ""
+                  },
+                  {
+                    "role": "user",
+                    "message": "Yes.",
+                    "time": 1774335040882,
+                    "endTime": 1774335040966,
+                    "secondsFromStart": 111.197,
+                    "duration": 84,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "Yes.",
+                          "start": 1774335040882,
+                          "end": 1774335040966,
+                          "confidence": 1,
+                          "language": "",
+                          "punctuated_word": "Yes."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "toolCalls": [
+                      {
+                        "id": "1774335044192-iqlmtk10k",
+                        "type": "function",
+                        "function": {
+                          "name": "send_calendar_invite",
+                          "arguments": "{\n  \"email\": \"vxk230045@utdallas.edu\",\n  \"timezone\": \"America/Chicago\",\n  \"name\": \"Vassante Kumar\",\n  \"title\": \"Meeting with Vassante Kumar\",\n  \"duration\": 20,\n  \"datetime\": \"2026-03-25T10:00:00\"\n}"
+                        }
+                      }
+                    ],
+                    "role": "tool_calls",
+                    "message": "",
+                    "time": 1774335044194,
+                    "secondsFromStart": 114.509
+                  }
+                ],
+                "messagesOpenAIFormatted": [
+                  {
+                    "role": "system",
+                    "content": "You are a scheduling assistant. Follow these steps EXACTLY \nin order. Do not skip or combine steps.\n\nSTEP 1 - COLLECT NAME:\nAsk: \"Can I start with your full name?\"\nWait for response. Store the name exactly as given.\n\nSTEP 2 - COLLECT EMAIL:\nAsk: \"What is your email address?\"\nWait for response. Store exactly as given including \nnumbers as digits (e.g. if user says \"two three\" \nstore as \"23\", if user says \"2 3\" store as \"23\").\n\nSTEP 3 - COLLECT TIMEZONE:\nAsk: \"What is your timezone?\"\nConvert to IANA format:\n- \"Central\" or \"CST\" → America/Chicago\n- \"Eastern\" or \"EST\" → America/New_York\n- \"Pacific\" or \"PST\" → America/Los_Angeles\n- \"IST\" or \"India\" → Asia/Kolkata\n- \"GMT\" or \"UK\" → Europe/London\n\nSTEP 4 - COLLECT DATE AND TIME:\nAsk: \"What date and time would you like the meeting?\"\nCurrent date and time is Mar 24, 2026, 6:48 AM UTC.\nUse this to calculate relative dates like \"tomorrow\" \nor \"next Friday\". Always confirm the exact date.\n\nSTEP 5 - COLLECT TITLE:\nAsk: \"What would you like to call ..."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Hi. I'm your scheduling assistant. I'll help you set up a calendar invite in just a minute. Can I start with your name?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Vasant Kumar."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "What is your email address?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "v x k two three zero zero four five at u t Dallas dot e d"
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "What is your time zone?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Central Standard Time."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "What date and time would you like the meeting?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Tomorrow at ten AM."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "What would you like to call this meeting?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Anything is fine."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "How long will the meeting be?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "For twenty minutes."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Let me confirm your name. v a s a n t space. k u m a r that correct?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "No. It's v a s s a n t e space k u m a r."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Got it. Let me update that. v a s s a n t e space k u m a r. Is that correct?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Yes."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Let me confirm your email, v x k two three zero zero four four five at u t Dallas dot e d. Is that correct?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "No. It's v x k two three zero zero four five at u t dallas dot e d u."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Got it. Let me update that. b x k two three zero zero four five. at UT Dallas dot e d u. Is that correct?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Yes."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Tomorrow, Wednesday, March twenty fifth at ten AM. America Chicago for twenty minutes. that correct?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Yes."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "And the meeting title is meeting with Vashanti Kumar. Is that correct?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Yes."
+                  },
+                  {
+                    "role": "assistant",
+                    "tool_calls": [
+                      {
+                        "id": "1774335044192-iqlmtk10k",
+                        "type": "function",
+                        "function": {
+                          "name": "send_calendar_invite",
+                          "arguments": "{\n  \"email\": \"vxk230045@utdallas.edu\",\n  \"timezone\": \"America/Chicago\",\n  \"name\": \"Vassante Kumar\",\n  \"title\": \"Meeting with Vassante Kumar\",\n  \"duration\": 20,\n  \"datetime\": \"2026-03-25T10:00:00\"\n}"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "role": "tool",
+                    "tool_call_id": "1774335044192-iqlmtk10k",
+                    "content": "Tool Result Still Pending But Proceed Further If Possible."
+                  }
+                ],
+                "variables": {
+                  "now": "Mar 24, 2026, 6:48 AM UTC",
+                  "currentDateTime": "Tuesday, March 24, 2026 at 6:48 AM UTC",
+                  "date": "Mar 24, 2026 UTC",
+                  "time": "6:48 AM UTC",
+                  "year": "2026",
+                  "month": "March",
+                  "day": "24",
+                  "transport": {
+                    "conversationType": "voice",
+                    "provider": "daily",
+                    "videoRecordingEnabled": false,
+                    "assistantVideoEnabled": false,
+                    "roomDeleteOnUserLeaveEnabled": true,
+                    "callUrl": "https://vapi.daily.co/Y0FORmOd5OQCTKn8tIX9"
+                  },
+                  "call": {
+                    "id": "019d1e9a-69de-7334-b8c4-ef6608233eb8",
+                    "type": "webCall",
+                    "status": "queued",
+                    "createdAt": "2026-03-24T06:48:49.374Z",
+                    "transport": {
+                      "conversationType": "voice",
+                      "provider": "daily",
+                      "videoRecordingEnabled": false,
+                      "assistantVideoEnabled": false,
+                      "roomDeleteOnUserLeaveEnabled": true,
+                      "callUrl": "https://vapi.daily.co/Y0FORmOd5OQCTKn8tIX9"
+                    }
+                  }
+                },
+                "variableValues": {
+                  "now": "Mar 24, 2026, 6:48 AM UTC",
+                  "currentDateTime": "Tuesday, March 24, 2026 at 6:48 AM UTC",
+                  "date": "Mar 24, 2026 UTC",
+                  "time": "6:48 AM UTC",
+                  "year": "2026",
+                  "month": "March",
+                  "day": "24",
+                  "transport": {
+                    "conversationType": "voice",
+                    "provider": "daily",
+                    "videoRecordingEnabled": false,
+                    "assistantVideoEnabled": false,
+                    "roomDeleteOnUserLeaveEnabled": true,
+                    "callUrl": "https://vapi.daily.co/Y0FORmOd5OQCTKn8tIX9"
+                  },
+                  "call": {
+                    "id": "019d1e9a-69de-7334-b8c4-ef6608233eb8",
+                    "type": "webCall",
+                    "status": "queued",
+                    "createdAt": "2026-03-24T06:48:49.374Z",
+                    "transport": {
+                      "conversationType": "voice",
+                      "provider": "daily",
+                      "videoRecordingEnabled": false,
+                      "assistantVideoEnabled": false,
+                      "roomDeleteOnUserLeaveEnabled": true,
+                      "callUrl": "https://vapi.daily.co/Y0FORmOd5OQCTKn8tIX9"
+                    }
+                  }
+                }
+              },
+              "call": {
+                "id": "019d1e9a-69de-7334-b8c4-ef6608233eb8",
+                "orgId": "abc063da-10f0-4657-8774-f1fe10648cd1",
+                "createdAt": "2026-03-24T06:48:49.374Z",
+                "updatedAt": "2026-03-24T06:48:49.374Z",
+                "type": "webCall",
+                "cost": 0,
+                "monitor": {
+                  "listenUrl": "wss://phone-call-websocket.aws-us-west-2-backend-production1.vapi.ai/019d1e9a-69de-7334-b8c4-ef6608233eb8/listen",
+                  "controlUrl": "https://phone-call-websocket.aws-us-west-2-backend-production1.vapi.ai/019d1e9a-69de-7334-b8c4-ef6608233eb8/control"
+                },
+                "transport": {
+                  "conversationType": "voice",
+                  "provider": "daily",
+                  "videoRecordingEnabled": false,
+                  "assistantVideoEnabled": false,
+                  "roomDeleteOnUserLeaveEnabled": true,
+                  "callUrl": "https://vapi.daily.co/Y0FORmOd5OQCTKn8tIX9"
+                },
+                "webCallUrl": "https://vapi.daily.co/Y0FORmOd5OQCTKn8tIX9",
+                "status": "queued",
+                "assistantId": "bf7df150-413b-4329-b9f4-40527caf78de"
+              },
+              "assistant": {
+                "id": "bf7df150-413b-4329-b9f4-40527caf78de",
+                "orgId": "abc063da-10f0-4657-8774-f1fe10648cd1",
+                "name": "Voice Scheduler",
+                "voice": {
+                  "voiceId": "Elliot",
+                  "provider": "vapi"
+                },
+                "createdAt": "2026-03-24T05:00:22.609Z",
+                "updatedAt": "2026-03-24T06:48:38.267Z",
+                "model": {
+                  "model": "gemini-2.5-flash",
+                  "toolIds": [
+                    "11797dbc-f17b-469a-8076-114856fbb36c"
+                  ],
+                  "messages": [
+                    {
+                      "role": "system",
+                      "content": "You are a scheduling assistant. Follow these steps EXACTLY \nin order. Do not skip or combine steps.\n\nSTEP 1 - COLLECT NAME:\nAsk: \"Can I start with your full name?\"\nWait for response. Store the name exactly as given.\n\nSTEP 2 - COLLECT EMAIL:\nAsk: \"What is your email address?\"\nWait for response. Store exactly as given including \nnumbers as digits (e.g. if user says \"two three\" \nstore as \"23\", if user says \"2 3\" store as \"23\").\n\nSTEP 3 - COLLECT TIMEZONE:\nAsk: \"What is your timezone?\"\nConvert to IANA format:\n- \"Central\" or \"CST\" → America/Chicago\n- \"Eastern\" or \"EST\" → America/New_York\n- \"Pacific\" or \"PST\" → America/Los_Angeles\n- \"IST\" or \"India\" → Asia/Kolkata\n- \"GMT\" or \"UK\" → Europe/London\n\nSTEP 4 - COLLECT DATE AND TIME:\nAsk: \"What date and time would you like the meeting?\"\nCurrent date and time is Mar 24, 2026, 6:48 AM UTC.\nUse this to calculate relative dates like \"tomorrow\" \nor \"next Friday\". Always confirm the exact date.\n\nSTEP 5 - COLLECT TITLE:\nAsk: \"What would you like to call this meeting?\"\nIf they skip it or say they don't mind, use \n\"Meeting with [name]\".\n\nSTEP 6 - COLLECT DURATION:\nAsk: \"How long will the meeting be?\"\nConvert to minutes:\n- \"15 minutes\" → 15\n- \"30 minutes\" → 30\n- \"1 hour\" → 60\n- \"1.5 hours\" → 90\n- \"2 hours\" → 120\nThere is no minimum duration. Accept any duration given.\n\nSTEP 7 - CONFIRM NAME:\nSay exactly: \"Let me confirm your name.\"\nThen spell EVERY letter out loud with hyphens between \nletters. For multiple words say \"space\" between words.\nExample: John Smith → \"J-O-H-N space S-M-I-T-H. \nIs that correct?\"\nWait for confirmation before proceeding.\n\nSTEP 8 - CONFIRM EMAIL:\nSay exactly: \"Let me confirm your email.\"\nRead EVERY character using these rules:\n- Each letter: say it individually\n- Each digit: say the NUMBER not the word \n  (say \"2\" not \"two\", say \"3\" not \"three\")\n- @ → say \"at\"\n- . → say \"dot\"\n- _ → say \"underscore\"\n- - → say \"hyphen\"\n- Never say \"minus\"\n- Never assume or add characters not given by user\nWait for confirmation before proceeding.\n\nSTEP 9 - CONFIRM DATE, TIME AND DURATION:\nSay the date and time in plain English including \ntimezone and duration.\nExample: \"Tomorrow, Wednesday March 25th at 11:00 AM \nCentral Time for 30 minutes. Is that correct?\"\nWait for confirmation before proceeding.\n\nSTEP 10 - CONFIRM TITLE:\nSay: \"And the meeting title is [title]. Is that correct?\"\nWait for confirmation before proceeding.\n\nSTEP 11 - CORRECTIONS:\nIf user corrects anything say: \"Got it, let me update that.\"\nThen re-confirm ONLY the corrected field using the \nsame method above. Do not re-confirm other fields.\n\nSTEP 12 - SEND INVITE:\nOnly after ALL fields are confirmed, call the \nsend_calendar_invite tool immediately with:\n- name (full name as given)\n- email (exact email with digits not words)\n- datetime (in YYYY-MM-DDTHH:MM:SS format)\n- duration (in minutes as a number)\n- timezone (IANA format)\n- title\n\nThen say: \"Perfect! I'm sending a calendar invite \nto your email now. Open the attachment to add it \nto your calendar.\" Then end the conversation.\n\nRULES:\n- Follow steps in exact order\n- Never skip confirmation steps\n- Never combine confirmation steps\n- Never say \"minus\" for hyphens\n- If user didn't say a hyphen you don't say a hyphen\n- Never convert digits to words when reading email back\n- Always wait for user confirmation after each step"
+                    }
+                  ],
+                  "provider": "google",
+                  "maxTokens": 1000,
+                  "tools": [
+                    {
+                      "id": "11797dbc-f17b-469a-8076-114856fbb36c",
+                      "createdAt": "2026-03-24T05:04:42.697Z",
+                      "updatedAt": "2026-03-24T05:08:56.137Z",
+                      "type": "function",
+                      "function": {
+                        "name": "send_calendar_invite",
+                        "strict": true,
+                        "parameters": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "email",
+                            "datetime",
+                            "duration",
+                            "timezone",
+                            "title"
+                          ],
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "default": "",
+                              "description": "The full name of the user"
+                            },
+                            "email": {
+                              "type": "string",
+                              "default": "",
+                              "description": "The email address of the user"
+                            },
+                            "title": {
+                              "type": "string",
+                              "default": "",
+                              "description": "Meeting title or \"Meeting with [name]\" if not provided"
+                            },
+                            "datetime": {
+                              "type": "string",
+                              "default": "",
+                              "description": "Meeting date and time in YYYY-MM-DDTHH:MM:SS format"
+                            },
+                            "duration": {
+                              "type": "number",
+                              "default": "",
+                              "description": "Duration in minutes. 30 minutes → 30, 1 hour → 60, 2 hours → 120"
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "default": "",
+                              "description": "IANA timezone string e.g. America/Chicago, America/New_York"
+                            }
+                          }
+                        },
+                        "description": "Call this tool after you have collected and confirmed all details from the user: name, email, datetime, duration, timezone and title. Only call once user confirms everything is correct."
+                      },
+                      "messages": [
+                        {
+                          "type": "request-start",
+                          "blocking": false
+                        }
+                      ],
+                      "orgId": "abc063da-10f0-4657-8774-f1fe10648cd1",
+                      "server": {
+                        "url": "https://vassante.app.n8n.cloud/webhook/77c056b8-58c9-4957-87a8-371265a22e2f",
+                        "timeoutSeconds": 15
+                      },
+                      "variableExtractionPlan": {
+                        "schema": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {}
+                        }
+                      }
+                    }
+                  ]
+                },
+                "firstMessage": "Hi! I'm your scheduling assistant. I'll help you set up a calendar invite in just a minute. Can I start with your name?",
+                "voicemailMessage": "Please call back when you're available.",
+                "endCallMessage": "Goodbye.",
+                "transcriber": {
+                  "model": "flux-general-en",
+                  "language": "en",
+                  "provider": "deepgram"
+                },
+                "analysisPlan": {
+                  "summaryPlan": {
+                    "enabled": false
+                  },
+                  "successEvaluationPlan": {
+                    "enabled": false
+                  }
+                },
+                "backgroundDenoisingEnabled": true,
+                "artifactPlan": {
+                  "structuredOutputIds": [
+                    "d6d79d2e-fd36-4f1c-a845-2fecfd2f9c8f"
+                  ]
+                }
+              }
+            }
+          },
+          "webhookUrl": "https://vassante.app.n8n.cloud/webhook/77c056b8-58c9-4957-87a8-371265a22e2f",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "66f0d40e-f089-440c-b29d-ad096dcfe80a",
+  "meta": {
+    "instanceId": "0462831de3fb10c9eb2f6c2dd30ba6b737c30ac13321cd78efccc5b935efd23b"
+  },
+  "id": "tMiwlHM4Hfa2WDMj",
+  "tags": []
+}
